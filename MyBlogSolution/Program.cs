@@ -6,7 +6,7 @@ using Microsoft.Data.SqlClient;
 using MyBlog.DataAccess.Repositories;
 using FluentValidation;
 using FluentValidation.AspNetCore;
-using MyBlog.Business.Validators; // Validator sýnýflarýný dahil ediyoruz
+using MyBlog.Business.Validators;
 using Microsoft.OpenApi.Models;
 using Serilog;
 using MyBlog.Business.Services;
@@ -15,7 +15,7 @@ var builder = WebApplication.CreateBuilder(args);
 
 // Serilog yapýlandýrmasý
 Log.Logger = new LoggerConfiguration()
-    .WriteTo.File("D:/logs/log-.txt", rollingInterval: RollingInterval.Day) // Günlük log dosyasý oluþturur
+    .WriteTo.File("D:/logs/log-.txt", rollingInterval: RollingInterval.Day)
     .CreateLogger();
 
 // Serilog'u uygulamanýn loglama saðlayýcýsý olarak ayarlayýn
@@ -23,11 +23,11 @@ builder.Host.UseSerilog();
 
 // appsettings.json dosyasýndaki JWT ayarlarýný alalým
 var jwtSettings = builder.Configuration.GetSection("Jwt");
-var key = Encoding.ASCII.GetBytes(jwtSettings["Key"]); // Gizli anahtar
+var key = Encoding.ASCII.GetBytes(jwtSettings["Key"]);
 
 // Veritabaný baðlantýsý için Connection String'i alalým
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
-builder.Services.AddTransient<IDbConnection>(db => new SqlConnection(connectionString)); // Veritabaný baðlantýsýný ekliyoruz
+builder.Services.AddTransient<IDbConnection>(db => new SqlConnection(connectionString));
 
 // JWT Authentication'ý konfigüre edelim
 builder.Services.AddAuthentication(options =>
@@ -44,28 +44,26 @@ builder.Services.AddAuthentication(options =>
         ValidateIssuerSigningKey = true,
         IssuerSigningKey = new SymmetricSecurityKey(key),
         ValidateIssuer = true,
-        ValidIssuer = jwtSettings["Issuer"], // Issuer doðrulamasý
+        ValidIssuer = jwtSettings["Issuer"],
         ValidateAudience = true,
-        ValidAudience = jwtSettings["Audience"], // Audience doðrulamasý
+        ValidAudience = jwtSettings["Audience"],
         ValidateLifetime = true,
-        ClockSkew = TimeSpan.Zero // Token'ýn hemen süresinin dolmasý için tolerans süresi yok
+        ClockSkew = TimeSpan.Zero
     };
 });
 
-// Authorization Servisini ekleyelim
-builder.Services.AddAuthorization();  // Authorization servisini ekliyoruz
+builder.Services.AddAuthorization();
 
 // FluentValidation'ý burada ekliyoruz
 builder.Services.AddControllers()
     .AddFluentValidation(fv =>
-        fv.RegisterValidatorsFromAssemblyContaining<LoginValidator>());
-
-builder.Services.AddControllers()
-    .AddFluentValidation(fv => fv.RegisterValidatorsFromAssemblyContaining<GalleryDTOValidator>());
-
+    {
+        fv.RegisterValidatorsFromAssemblyContaining<LoginValidator>();
+        fv.RegisterValidatorsFromAssemblyContaining<GalleryDTOValidator>();
+        fv.RegisterValidatorsFromAssemblyContaining<ArticleValidator>();
+    });
 
 // Swagger ve diðer servisleri ekleyin
-builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(c =>
 {
     c.SwaggerDoc("v1", new OpenApiInfo
@@ -74,7 +72,6 @@ builder.Services.AddSwaggerGen(c =>
         Version = "v1"
     });
 
-    // Swagger JWT Bearer Authentication
     c.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
     {
         In = ParameterLocation.Header,
@@ -99,14 +96,15 @@ builder.Services.AddSwaggerGen(c =>
         }
     });
 
-    // Swagger anotasyonlarýný etkinleþtir
     c.EnableAnnotations();
 });
 
 // Repository ve Dependency Injection ekleyelim
-builder.Services.AddScoped<IUserRepository, UserRepository>(); // IUserRepository ve UserRepository baðýmlýlýklarýný ekliyoruz
-builder.Services.AddScoped<IGalleryRepository, GalleryRepository>(); // IGalleryRepository ve GalleryRepository baðýmlýlýklarýný ekliyoruz
-builder.Services.AddScoped<IGalleryService, GalleryService>(); // Service baðýmlýlýðýný ekleyin
+builder.Services.AddScoped<IUserRepository, UserRepository>();
+builder.Services.AddScoped<IGalleryRepository, GalleryRepository>();
+builder.Services.AddScoped<IGalleryService, GalleryService>();
+builder.Services.AddScoped<IArticleRepository, ArticleRepository>();
+
 builder.Services.AddAutoMapper(AppDomain.CurrentDomain.GetAssemblies());
 
 var app = builder.Build();
@@ -114,12 +112,10 @@ var app = builder.Build();
 // Middleware'ler
 if (app.Environment.IsDevelopment())
 {
-    // Geliþtirme ortamýnda detaylý hata sayfasý göster
     app.UseDeveloperExceptionPage();
 }
 else
 {
-    // Üretim ortamýnda genel hata sayfasý göster
     app.UseExceptionHandler("/Home/Error");
     app.UseHsts();
 }
@@ -134,12 +130,11 @@ app.UseSwaggerUI(c =>
 app.UseHttpsRedirection();
 app.UseRouting();
 
-// Hata yakalama middleware'i burada ekleniyor
 app.UseMiddleware<ErrorHandlerMiddleware>();
 
-app.UseAuthentication(); // JWT Authentication'ý etkinleþtirir
-app.UseAuthorization();  // Authorization'ý etkinleþtirir
+app.UseAuthentication();
+app.UseAuthorization();
 
-app.MapControllers(); // Controller'larý haritalar ve çalýþmasýný saðlar
+app.MapControllers();
 
 app.Run();

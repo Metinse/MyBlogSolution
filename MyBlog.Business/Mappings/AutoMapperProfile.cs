@@ -1,7 +1,7 @@
 ﻿using AutoMapper;
 using MyBlog.Entities;
-using MyBlog.DTOs;
 using MyBlog.Entities.DTOs;
+
 
 namespace MyBlog.Mappings
 {
@@ -10,13 +10,12 @@ namespace MyBlog.Mappings
         public AutoMapperProfile()
         {
             // Entity => DTO dönüşümü
-            CreateMap<User, UserDto>();
-
-            // DTO => Entity dönüşümü (kullanıcı oluşturma veya güncelleme senaryoları için)
-            CreateMap<UserDto, User>();
+            //CreateMap<User, UserDto>();       
 
             // Login için DTO dönüşümü
             CreateMap<LoginDto, User>();
+
+            CreateMap<Article, ArticleDTO>().ReverseMap();
         }
     }
 }
