@@ -1,8 +1,7 @@
 ﻿using Microsoft.AspNetCore.Mvc;
-using MyBlog.DataAccess.Repositories;
-using MyBlog.Entities;
+using MyBlog.Business.Services;
 using MyBlog.Entities.DTOs;
-using AutoMapper;
+using Microsoft.Extensions.Logging;
 
 namespace MyBlog.API.Controllers
 {
@@ -10,38 +9,34 @@ namespace MyBlog.API.Controllers
     [ApiController]
     public class ArticleController : ControllerBase
     {
-        private readonly IArticleRepository _articleRepository;
-        private readonly IMapper _mapper;
+        private readonly IArticleService _articleService;
         private readonly ILogger<ArticleController> _logger;
 
-        public ArticleController(IArticleRepository articleRepository, IMapper mapper, ILogger<ArticleController> logger)
+        public ArticleController(IArticleService articleService, ILogger<ArticleController> logger)
         {
-            _articleRepository = articleRepository;
-            _mapper = mapper;
+            _articleService = articleService;
             _logger = logger;
         }
+
         // GET: api/articles
         [HttpGet]
         public IActionResult GetAllArticles()
         {
             _logger.LogInformation("ArticleController.GetAll method called");
-            var articles = _articleRepository.GetAllArticles();
-            var articleDtos = _mapper.Map<IEnumerable<ArticleDTO>>(articles);
-            return Ok(articleDtos);
+            var articles = _articleService.GetAll();
+            return Ok(articles);
         }
 
         // GET: api/articles/5
         [HttpGet("{id}")]
         public IActionResult GetArticleById(int id)
         {
-            var article = _articleRepository.GetArticleById(id);
+            var article = _articleService.GetById(id);
             if (article == null)
             {
                 return NotFound();
             }
-
-            var articleDto = _mapper.Map<ArticleDTO>(article);
-            return Ok(articleDto);
+            return Ok(article);
         }
 
         // POST: api/articles
@@ -53,8 +48,7 @@ namespace MyBlog.API.Controllers
                 return BadRequest(ModelState);
             }
 
-            var article = _mapper.Map<Article>(articleDto);
-            _articleRepository.AddArticle(article);
+            _articleService.Add(articleDto);
             return Ok();
         }
 
@@ -67,14 +61,13 @@ namespace MyBlog.API.Controllers
                 return BadRequest(ModelState);
             }
 
-            var article = _articleRepository.GetArticleById(id);
+            var article = _articleService.GetById(id);
             if (article == null)
             {
                 return NotFound();
             }
 
-            _mapper.Map(articleDto, article);
-            _articleRepository.UpdateArticle(article);
+            _articleService.Update(articleDto);
             return Ok();
         }
 
@@ -82,13 +75,13 @@ namespace MyBlog.API.Controllers
         [HttpDelete("{id}")]
         public IActionResult DeleteArticle(int id)
         {
-            var article = _articleRepository.GetArticleById(id);
+            var article = _articleService.GetById(id);
             if (article == null)
             {
                 return NotFound();
             }
 
-            _articleRepository.DeleteArticle(id);
+            _articleService.Delete(id);
             return Ok();
         }
 
@@ -96,10 +89,8 @@ namespace MyBlog.API.Controllers
         [HttpGet("search")]
         public IActionResult SearchArticles(string title, string titleSummary, int? categoryId)
         {
-            var articles = _articleRepository.SearchArticles(title, titleSummary, categoryId);
-            var articleDtos = _mapper.Map<IEnumerable<ArticleDTO>>(articles);
-            return Ok(articleDtos);
+            var articles = _articleService.Search(title, titleSummary, categoryId);
+            return Ok(articles);
         }
     }
 }
-

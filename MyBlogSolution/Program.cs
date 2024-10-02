@@ -15,7 +15,7 @@ var builder = WebApplication.CreateBuilder(args);
 
 // Serilog yapýlandýrmasý
 Log.Logger = new LoggerConfiguration()
-    .WriteTo.File("D:/logs/log-.txt", rollingInterval: RollingInterval.Day)
+    .WriteTo.File("z:/logs/log-.txt", rollingInterval: RollingInterval.Day)
     .CreateLogger();
 
 // Serilog'u uygulamanýn loglama saðlayýcýsý olarak ayarlayýn
