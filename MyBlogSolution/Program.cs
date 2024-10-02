@@ -18,18 +18,17 @@ Log.Logger = new LoggerConfiguration()
     .WriteTo.File("D:/logs/log-.txt", rollingInterval: RollingInterval.Day)
     .CreateLogger();
 
-// Serilog'u uygulamanýn loglama saðlayýcýsý olarak ayarlayýn
 builder.Host.UseSerilog();
 
-// appsettings.json dosyasýndaki JWT ayarlarýný alalým
+// JWT ayarlarý
 var jwtSettings = builder.Configuration.GetSection("Jwt");
 var key = Encoding.ASCII.GetBytes(jwtSettings["Key"]);
 
-// Veritabaný baðlantýsý için Connection String'i alalým
+// Veritabaný baðlantýsý
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
 builder.Services.AddTransient<IDbConnection>(db => new SqlConnection(connectionString));
 
-// JWT Authentication'ý konfigüre edelim
+// JWT Authentication konfigürasyonu
 builder.Services.AddAuthentication(options =>
 {
     options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
@@ -54,7 +53,7 @@ builder.Services.AddAuthentication(options =>
 
 builder.Services.AddAuthorization();
 
-// FluentValidation'ý burada ekliyoruz
+// FluentValidation ekliyoruz
 builder.Services.AddControllers()
     .AddFluentValidation(fv =>
     {
@@ -63,7 +62,19 @@ builder.Services.AddControllers()
         fv.RegisterValidatorsFromAssemblyContaining<ArticleValidator>();
     });
 
-// Swagger ve diðer servisleri ekleyin
+// CORS politikasýný ekliyoruz
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("AllowAngularApp",
+        builder =>
+        {
+            builder.WithOrigins("http://localhost:4200") // Angular uygulamasý adresi
+                   .AllowAnyHeader()
+                   .AllowAnyMethod();
+        });
+});
+
+// Swagger ve diðer servisler
 builder.Services.AddSwaggerGen(c =>
 {
     c.SwaggerDoc("v1", new OpenApiInfo
@@ -99,7 +110,7 @@ builder.Services.AddSwaggerGen(c =>
     c.EnableAnnotations();
 });
 
-// Repository ve Dependency Injection ekleyelim
+// Dependency Injection
 builder.Services.AddScoped<IUserRepository, UserRepository>();
 builder.Services.AddScoped<IGalleryRepository, GalleryRepository>();
 builder.Services.AddScoped<IGalleryService, GalleryService>();
@@ -121,7 +132,10 @@ else
     app.UseHsts();
 }
 
-// Swagger middleware'lerini ekleyelim
+// CORS Middleware'ini ekliyoruz
+app.UseCors("AllowAngularApp");
+
+// Swagger Middleware
 app.UseSwagger();
 app.UseSwaggerUI(c =>
 {
