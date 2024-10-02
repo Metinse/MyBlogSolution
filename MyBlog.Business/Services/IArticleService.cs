@@ -9,5 +9,6 @@ namespace MyBlog.Business.Services
         void Add(ArticleDTO articleDto);
         ArticleDTO Update(ArticleDTO articleDto);
         void Delete(int id);
+        List<ArticleDTO> Search(string? title, string? titleSummary, int? categoryId);
     }
 }

@@ -87,7 +87,7 @@ namespace MyBlog.API.Controllers
 
         // GET: api/articles/search
         [HttpGet("search")]
-        public IActionResult SearchArticles(string title, string titleSummary, int? categoryId)
+        public IActionResult SearchArticles(string? title, string? titleSummary, int? categoryId)
         {
             var articles = _articleService.Search(title, titleSummary, categoryId);
             return Ok(articles);

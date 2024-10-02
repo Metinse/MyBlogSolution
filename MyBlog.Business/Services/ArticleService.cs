@@ -46,7 +46,7 @@ namespace MyBlog.Business.Services
             _articleRepository.DeleteArticle(id);
         }
 
-        public List<ArticleDTO> Search(string title, string titleSummary, int? categoryId)
+        public List<ArticleDTO> Search(string? title, string? titleSummary, int? categoryId)
         {
             var articles = _articleRepository.SearchArticles(title, titleSummary, categoryId);
             return _mapper.Map<List<ArticleDTO>>(articles);

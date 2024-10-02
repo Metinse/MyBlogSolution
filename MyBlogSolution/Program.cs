@@ -15,7 +15,7 @@ var builder = WebApplication.CreateBuilder(args);
 
 // Serilog yapýlandýrmasý
 Log.Logger = new LoggerConfiguration()
-    .WriteTo.File("z:/logs/log-.txt", rollingInterval: RollingInterval.Day)
+    .WriteTo.File("D:/logs/log-.txt", rollingInterval: RollingInterval.Day)
     .CreateLogger();
 
 // Serilog'u uygulamanýn loglama saðlayýcýsý olarak ayarlayýn
@@ -104,6 +104,7 @@ builder.Services.AddScoped<IUserRepository, UserRepository>();
 builder.Services.AddScoped<IGalleryRepository, GalleryRepository>();
 builder.Services.AddScoped<IGalleryService, GalleryService>();
 builder.Services.AddScoped<IArticleRepository, ArticleRepository>();
+builder.Services.AddScoped<IArticleService, ArticleService>();
 
 builder.Services.AddAutoMapper(AppDomain.CurrentDomain.GetAssemblies());
 
